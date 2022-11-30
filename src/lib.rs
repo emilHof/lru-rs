@@ -347,8 +347,7 @@ impl<K: Hash + Eq, V, S: BuildHasher> LruCache<K, V, S> {
                 // if the key is already in the cache just update its value and move it to the
                 // front of the list
                 unsafe { mem::swap(&mut v, &mut (*(*node_ptr).val.as_mut_ptr()) as &mut V) }
-                self.detach(node_ptr);
-                self.attach(node_ptr);
+                self.reattach(node_ptr);
                 Some((k, v))
             }
             None => {
@@ -1051,6 +1050,12 @@ impl<K: Hash + Eq, V, S: BuildHasher> LruCache<K, V, S> {
             (*self.tail).prev = node;
             (*(*node).prev).next = node;
         }
+    }
+
+    // Detaches the `node` and attaches it after the sigil `self.head` node.
+    fn reattach(&mut self, node: *mut LruEntry<K, V>) {
+        self.detach(node);
+        self.attach(node);
     }
 }
 
